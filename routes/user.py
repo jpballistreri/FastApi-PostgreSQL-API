@@ -12,13 +12,25 @@ f = Fernet(key)
 user = APIRouter()
 
 
-@user.get("/users", response_model=list[User], tags=["users"])
-def get_users():
+@user.get("/users/{page}", response_model=list[User], tags=["users"])
+def get_users(page: int = 1):
+    per_page = 5
+
+    # Calcular el índice de inicio y fin para la paginación
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+
     # Ejecuta la consulta para obtener todos los usuarios de la base de datos
-    result = conn.execute(users.select()).fetchall()
+    query = users.select()
+
+    # Obtener todos los usuarios de la base de datos
+    all_users = conn.execute(query).fetchall()
+
+    # Filtrar los usuarios según el índice de paginación
+    paginated_users = all_users[start_index:end_index]
 
     # Convierte los objetos Row en diccionarios utilizando '_asdict()'
-    result = [row._asdict() for row in result]
+    result = [row._asdict() for row in paginated_users]
 
     # Devuelve la lista de usuarios en formato JSON
     return result
